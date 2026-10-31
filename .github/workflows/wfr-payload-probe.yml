@@ -1,0 +1,19 @@
+name: WFR payload probe
+on:
+  workflow_run:
+    workflows: ["Release Workflow"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump triggering run trust facts
+        run: |
+          jq -c '{event:.workflow_run.event, conclusion:.workflow_run.conclusion, head_branch:.workflow_run.head_branch, head_repo:.workflow_run.head_repository.full_name, head_sha:.workflow_run.head_sha, prs:.workflow_run.pull_requests}' "$GITHUB_EVENT_PATH"
+          echo "pull_requests_len=$(jq -r '.workflow_run.pull_requests|length' "$GITHUB_EVENT_PATH")"
+          echo "pr0_number=[${{ github.event.workflow_run.pull_requests[0].number }}]"
