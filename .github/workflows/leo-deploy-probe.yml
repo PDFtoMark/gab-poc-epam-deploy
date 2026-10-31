@@ -1,7 +1,7 @@
 name: Leo Deploy Probe
 on:
   workflow_run:
-    workflows: ["Release Workflow"]
+    workflows: ["Release Workflow", "Build"]
     types:
       - completed
 
@@ -21,6 +21,7 @@ jobs:
     steps:
       - name: Triggering-run trust facts
         run: |
+          echo "trigger_workflow=${{ github.event.workflow_run.name }}"
           echo "workflow_run.event=${{ github.event.workflow_run.event }}"
           echo "workflow_run.head_repository=${{ github.event.workflow_run.head_repository.full_name }}"
           echo "PR_NUMBER=[$PR_NUMBER]"
@@ -40,7 +41,6 @@ jobs:
         run: |
           shopt -s inherit_errexit
           set -xeEo pipefail
-          echo "::group::Upload to AWS S3 (SIMULATED)"
           cd ./artifact/storybook-static
           echo "--- content that would be published ---"
           cat index.html
@@ -51,4 +51,3 @@ jobs:
           else
             echo "SIMULATED COMMAND: aws s3 sync . s3://${S3_BUCKET_NAME}/pr-${PR_NUMBER}/commit-${HEAD_SHA}/ --delete"
           fi
-          echo "::endgroup::"
